@@ -1,1 +1,0 @@
-# DCGANs-for-3D-object-generation
