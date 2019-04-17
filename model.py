@@ -1,10 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-'''
-hey sainath, could you please change the variable shapes and stride lengths to something that will work
-and makes sense for the arrays. Thanks! PS the size of the np arrays representing the .binvox files are (256, 256, 256)
-'''
+
 
 def discriminator(data):
 
