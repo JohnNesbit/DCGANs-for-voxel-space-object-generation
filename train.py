@@ -208,7 +208,7 @@ for i in range(5001):
         images = sess.run(generator(ylabels[i]))
         d_result = sess.run(discriminator(x_placeholder), {x_placeholder: images})
         print("TRAINING STEP", i)
-
+        print("Gen_loss:" + str(d_result))
         generated_model = binvox_rw.Voxels(sess.run(images), dims=[256, 256, 256], translate=[-12.75, -9.37502, -26,75], scale=53.3
                                            , axis_order="xzy")
         generated_model.write("generated_file_no_" + str(i))
@@ -218,18 +218,7 @@ for i in range(5001):
         print("saved to %s" % save_path)
 
     if i == 0:
-        ngenv = np.array([])
-        gen = np.array(sess.run(Gz))
-        gen = gen.reshape([256, 256, 256])
-        for x in gen:
-            for y in x:
-                for f in y:
-                    if f > .4:
-                        np.append(ngenv, np.array(1))
-                    else:
-                        np.append(ngenv, np.array(0))
-
-        ngenv = ngenv.resize([256, 256, 256])
+        ngenv = np.array(sess.run(Gz)).resize([256, 256, 256])
         print(gen[1])
         genv = binvox_rw.Voxels(ngenv, dims=[256, 256, 256], translate=[-12.75, -9.37502, -26.75], scale=53.5
                                 , axis_order="xzy")
