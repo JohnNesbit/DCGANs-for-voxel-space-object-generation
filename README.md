@@ -12,7 +12,7 @@ generator: transposed 3D CNN -> Lrelu -> transposed 3D CNN -> Lrelu -> transpose
 
 The data was loaded via a library called binvox r-w.
 We used the shapenet dataset to get our data.
-The data was processed into .binvox using binvox application 
+The data was processed from mesh format into .binvox using binvox application.
 credit for the binvox application: http://www.patrickmin.com/binvox/binvox.bib
 
 
