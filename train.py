@@ -178,7 +178,7 @@ gLoss = 0
 dLossFake, dLossReal = 1, 1
 
 # training loop
-for i in range(5001):
+for i in range(21):
     real_image_batch = xtrain[i]
 
     # Train discriminator on generated images
@@ -199,27 +199,21 @@ for i in range(5001):
     d_real_count += 1
 
 
-    summary = sess.run(merged, {x_placeholder: real_image_batch, d_real_count_ph: d_real_count,
-                                d_fake_count_ph: d_fake_count, g_count_ph: g_count})
+    """summary = sess.run(merged, {x_placeholder: real_image_batch, d_real_count_ph: d_real_count,
+                                d_fake_count_ph: d_fake_count, g_count_ph: g_count})"""
     d_real_count, d_fake_count, g_count = 0, 0, 0
 
-    if i % 1000 == 0:
+    if i % 5 == 0:
 
         images = sess.run(generator(ylabels[i]))
         d_result = sess.run(discriminator(x_placeholder), {x_placeholder: images})
         print("TRAINING STEP", i)
-        print("Gen_loss:" + str(d_result))
-        generated_model = binvox_rw.Voxels(sess.run(images), dims=[256, 256, 256], translate=[-12.75, -9.37502, -26,75], scale=53.3
+        print("Descriminator_loss:" + str(dLossReal))
+        generated_model = binvox_rw.Voxels(images, dims=[256, 256, 256], translate=[-12.75, -9.37502, -26,75], scale=53.3
                                            , axis_order="xzy")
-        generated_model.write("generated_file_no_" + str(i))
+        binvox_rw.write(generated_model, fp=open("generated_file_no_" + str(i) + ".binvox", "wb"))
 
-    if i % 5000 == 0:
+    if i % 20 == 0:
         save_path = saver.save(sess, "models/pretrained_3ddcgan.ckpt", global_step=i)
         print("saved to %s" % save_path)
 
-    if i == 0:
-        ngenv = np.array(sess.run(Gz)).resize([256, 256, 256])
-        print(gen[1])
-        genv = binvox_rw.Voxels(ngenv, dims=[256, 256, 256], translate=[-12.75, -9.37502, -26.75], scale=53.5
-                                , axis_order="xzy")
-        binvox_rw.write(fp=open("pre_training_sample.binvox", "wb"), voxel_model=genv)
