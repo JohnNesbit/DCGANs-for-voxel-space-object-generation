@@ -2,41 +2,78 @@ import numpy as np
 from binvox_rw import read_as_3d_array
 import os
 import pickle
+import re
+import time
 
 """
 this file takes in the .binvox files and converts them to numpy arrays 
 then pickles them for easy later use
 """
 
-# file_type = "" is equal to your unconverted file type. why? line 19
 fy = np.array([])
 fx = np.array([])
-base = "chair"  # enter the name of directory of 3D files that is filled with a single type of object
+
+
+fdir = {
+    0: "bathtub",
+    1: "bed",
+    2:"chairs",
+    3: "desk",
+    4: "dresser",
+    5: "monitor",
+    6: "night_stand",
+    7: "sofa",
+    8: "table",
+    9: "toilet"
+}
+
+ifdir = {
+    "bathtub": 1,
+    "bed": 2,
+    "chairs": 3,
+    "desk": 4,
+    "dresser": 5,
+    "monitor": 6,
+    "night_stand": 7,
+    "sofa": 8,
+    "table": 9,
+    "toilet": 10
+}
+
+
+base = "E:/PycharmProjects/untitled/%s/"
+
+
 intbase = 890
 endbase = ".binvox"
-dirfiles = os.listdir(base)
-cou = 0
 
 
-for x in dirfiles:
-    if "binvox" in x:
-        if cou > 50: # I had to implement a timer because the variable would be vulnerable to bit overflow
-            break # I am not being pretentious I got a memory error
-        cou = cou + 1
-        path = base + "/" + x
-        xtrain = read_as_3d_array(open(path, "rb"))
-        xtrain = np.array(xtrain.data.astype(int))
-        print(xtrain)
-        fx = np.append(fx, xtrain)
-        if base in x:
-            fy = np.append(fy, 0) # label will be later decoded via dir from 0
-    """
-    uncomment if you used binvox to convert files
-     but have non converted files
-    if "file_type" in x:
-        os.remove(x)
-        """
-    
-print(fx)
-pickle.dump(fx, open("X" + base + ".pickle", "wb"), protocol=pickle.DEFAULT_PROTOCOL)
-pickle.dump(fy, open("Y" + base + ".pickle", "wb"), protocol=pickle.DEFAULT_PROTOCOL)
+
+xc = np.array([])
+yc = np.array([])
+for _ in range(9):
+    for i in os.listdir(base % fdir[_]):
+        for x in os.listdir(base % fdir[_] + i):
+            print(x)
+            path = base % fdir[_] + i + "/" + x
+            if "off" in x:
+                os.system(path)
+                time.sleep(1)
+                x = re.sub(r".off", ".binvox",  str(x))
+                path = base % fdir[_] + i + "/" + x
+                xtrain = read_as_3d_array(open(path, "rb"))
+                xtrain = np.array(xtrain.data.astype(int))
+                print(xtrain.shape)
+                xc = np.append(fx, xtrain)
+                yc = np.append(fy, _)  # chair label will be later decoded via dir from 0
+            if "binvox" in x:
+                xtrain = read_as_3d_array(open(path, "rb"))
+                xtrain = np.array(xtrain.data.astype(int))
+                print(xtrain.shape)
+                xc = np.append(fx, xtrain)
+                yc = np.append(fy, _) # chair label will be later decoded via dir from 0
+
+print(fx.shape)
+pickle.dump(fx, open("Xdata.pickle", "wb"), protocol=pickle.DEFAULT_PROTOCOL)
+pickle.dump(fy, open("Ydata.pickle", "wb"), protocol=pickle.DEFAULT_PROTOCOL)
+
