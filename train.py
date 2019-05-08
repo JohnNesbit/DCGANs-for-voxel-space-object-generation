@@ -108,28 +108,23 @@ def generator(label):
     return g
 
 
+sess = tf.Session()
 # temparary data values that we can swap easily.
-xtrain = np.array(pickle.load(open("XChair.pickle", "rb")))
-ylabels = np.array(pickle.load(open("YChair.pickle", "rb")))
-#txtrain = np.array(pickle.load(open("Xtable.pickle", "rb")))
-#tylabels = np.array(pickle.load(open("Ytable.pickle", "rb")))
-#xtrain = np.append(xtrain, txtrain)
-#ylabels = np.append(ylabels, tylabels)
+xtrain = np.array(pickle.load(open("Xdata.pickle", "rb")))
+ylabels = np.array(pickle.load(open("Ydata.pickle", "rb")))
 
-"""np.random.seed(5)
+np.random.seed(5)
 np.random.shuffle(xtrain)
 np.random.seed(5)
 np.random.shuffle(ylabels)
-"""
+print(ylabels.shape)
+damount = (ylabels.shape)
 
-
-sess = tf.Session()
 x_placeholder = tf.placeholder(tf.float64, shape= [256, 256, 256, 1, 1], name='x_placeholder')
 
-ylabels = ylabels.reshape([21])
-xtrain = xtrain.reshape([21, 256, 256, 256, 1, 1])
+ylabels = ylabels.reshape([damount])
+xtrain = xtrain.reshape([damount, 256, 256, 256, 1, 1])
 print(xtrain.shape)
-
 
 Gz = generator(ylabels[1])
 
