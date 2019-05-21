@@ -1,5 +1,6 @@
 
-# data files: "XChair.pickle", "YChair.pickle", "Xtable", "Ytable" generator and descriminator file: model.py
+#sadly my computer is terrible so I cant run the data proccessing component so you must print out what the size of 
+# ylabels array and put that in damount at line 115 sorry!
 import pickle
 import matplotlib
 matplotlib.use("tkagg")
@@ -7,7 +8,7 @@ import binvox_rw
 import numpy as np
 import tensorflow as tf
 
-gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333)
+sess = tf.Session()
 
 dw_1 = tf.get_variable(name="dw_1", shape=[1, 2, 2, 1, 1], initializer=tf.initializers.random_normal(stddev=0.02),
                        trainable=True, dtype=tf.float64)
@@ -26,12 +27,6 @@ dw_4 = tf.get_variable(name="dw_4", shape=[562432, 1], initializer=tf.initialize
                        trainable=True, dtype=tf.float64)
 db_4 = tf.get_variable(name="db_4", shape=[1], initializer=tf.initializers.random_normal(stddev=0.02),
                        trainable=True, dtype=tf.float64)
-"""
-dw_5 = tf.get_variable(name="dw_5", shape=[1, 2197], initializer=tf.initializers.random_normal(stddev=0.02),
-                       trainable=True, dtype=tf.float64)
-db_5 = tf.get_variable(name="db_5", shape=[1], initializer=tf.initializers.random_normal(stddev=0.02),
-                       trainable=True, dtype=tf.float64)
-                       """
 
 gw_1 = tf.get_variable(name="gw_1", shape=[1, 2, 2, 1, 1], initializer=tf.initializers.random_normal(stddev=0.02),
                        trainable=True, dtype=tf.float64)
@@ -73,23 +68,18 @@ def discriminator(data):
     d =  tf.add(d, db_4)
     d = tf.nn.relu(d)
     print(d.shape)
-    """
-    d = tf.matmul(dw_5, d)
-    print(d.shape)
-    d = d + db_5
-    """
-    print("d end")
+    
 
     return d
 
 
 def generator(label):
-    np.random.seed(int(label))
-    label = np.random.normal(size=[1, 4, 4, 4, 1])
+
     # do calculations
+    tf.fill(dims=[1, 2, 2, 2, 1], value=label)
     # problem  Incompatible shapes between op input and calculated input gradient not with biases
     print("gen prints start:")
-    g = tf.nn.conv3d_transpose(label, gw_1,  [1, 8, 8, 8, 1], strides=[1, 2, 2, 2, 1], padding="SAME", name="conv3d1")+ gb_1
+    g = tf.nn.conv3d_transpose(label, gw_1,  [1, 8, 8, 8, 1], strides=[1, 4, 4, 4, 1], padding="SAME", name="conv3d1")+ gb_1
     g = tf.nn.leaky_relu(g)
     g = tf.nn.conv3d_transpose(g, gw_2, [1, 32, 32, 32, 1] , strides=[1, 4, 4, 4, 1], padding="SAME")+ gb_2
     g = tf.nn.leaky_relu(g)
@@ -108,7 +98,6 @@ def generator(label):
     return g
 
 
-sess = tf.Session()
 # temparary data values that we can swap easily.
 xtrain = np.array(pickle.load(open("Xdata.pickle", "rb")))
 ylabels = np.array(pickle.load(open("Ydata.pickle", "rb")))
@@ -118,22 +107,29 @@ np.random.shuffle(xtrain)
 np.random.seed(5)
 np.random.shuffle(ylabels)
 print(ylabels.shape)
-damount = (ylabels.shape)
+print(ylabels)
+damount = []
 
 x_placeholder = tf.placeholder(tf.float64, shape= [256, 256, 256, 1, 1], name='x_placeholder')
+y_placeholder = tf.placeholder(tf.float64, shape=[1], name='y_placeholder')
 
 ylabels = ylabels.reshape([damount])
 xtrain = xtrain.reshape([damount, 256, 256, 256, 1, 1])
 print(xtrain.shape)
 
-Gz = generator(ylabels[1])
 
-Dx = discriminator(xtrain[1])
+Gz = generator(y_placeholder)
+print("generator stats")
+print(Gz.shape)
+print(Gz)
+
+Dx = discriminator(x_placeholder)
 
 Dg = discriminator(Gz)
 
 
 # defines loss functions for models
+
 g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.constant([1], shape=[1, 1], dtype=tf.float64), logits=Dg))
 d_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.constant([1], shape=[1, 1], dtype=tf.float64),logits=Dg))
 d_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.constant([0], shape=[1, 1], dtype=tf.float64),logits=Dx))
@@ -173,35 +169,38 @@ gLoss = 0
 dLossFake, dLossReal = 1, 1
 
 # training loop
-for i in range(21):
+for i in range(damount):
     real_image_batch = xtrain[i]
-
+    iylabel = ylabels[i]
     # Train discriminator on generated images
     _, dLossReal, dLossFake, gLoss = sess.run([d_trainer_fake, d_loss_real, d_loss_fake, g_loss],
-                                                {x_placeholder: real_image_batch})
+                                                {x_placeholder: real_image_batch},
+												{y_placeholder: iylabel})
     d_fake_count += 1
 
 
     # Train the generator
     sess.run([g_trainer, d_loss_real, d_loss_fake, g_loss],
-                                                {x_placeholder: real_image_batch})
+                                                {x_placeholder: real_image_batch},
+												{y_placeholder: iylabel})
     g_count += 1
 
 
     # train d on real images
     sess.run([d_trainer_real, d_loss_real, d_loss_fake, g_loss],
-                                                {x_placeholder: real_image_batch})
+                                                {x_placeholder: real_image_batch},
+												{y_placeholder: iylabel})
     d_real_count += 1
 
 
-    """summary = sess.run(merged, {x_placeholder: real_image_batch, d_real_count_ph: d_real_count,
-                                d_fake_count_ph: d_fake_count, g_count_ph: g_count})"""
+    
     d_real_count, d_fake_count, g_count = 0, 0, 0
 
     if i % 5 == 0:
 
         images = sess.run(generator(ylabels[i]))
-        d_result = sess.run(discriminator(x_placeholder), {x_placeholder: images})
+        d_result = sess.run(discriminator(x_placeholder), {x_placeholder: images},
+												{y_placeholder: iylabel})
         print("TRAINING STEP", i)
         print("Descriminator_loss:" + str(dLossReal))
         generated_model = binvox_rw.Voxels(images, dims=[256, 256, 256], translate=[-12.75, -9.37502, -26,75], scale=53.3
@@ -211,4 +210,3 @@ for i in range(21):
     if i % 20 == 0:
         save_path = saver.save(sess, "models/pretrained_3ddcgan.ckpt", global_step=i)
         print("saved to %s" % save_path)
-
