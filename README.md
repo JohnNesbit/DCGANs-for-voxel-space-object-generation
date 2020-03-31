@@ -1,3 +1,6 @@
+# I wrote this code a very long time ago it is bad
+
+
 DCGANs-for-3D-object-generation:
 
 DCGANs to create objects in voxel space
